@@ -1,0 +1,70 @@
+- name: Configurar Git, Clonear Repositorio, genrar build de react y crear imagen en docker
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Instalar Git
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+      
+    - name: Clonar Repositorio
+      git:
+        repo: 'git@gitlab.com:StevenMejia/pruebas.git'
+        dest: /home/sfmx/prueba
+        version: 'main'
+        force: yes
+          
+    - name: Instalar Curl
+      apt:
+        name: curl
+        state: present
+        update_cache: yes
+      
+    - name: Descargar script de NodeSource para Node.js
+      command: curl -sL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh
+
+    - name: Ejecutar script de NodeSource para Node.js
+      command: bash /tmp/nodesource_setup.sh
+
+    - name: Instllar Nodej.js y npm (v20.17.0 y npm 10.8.2)
+      apt:
+        name: nodejs
+        state: present
+
+    - name: Actualiza npm a la version 10.8.2
+      command: npm install -g npm@10.8.2
+
+    - name: Instalar dependencias de React
+      command: npm install 
+      args:
+        chdir: /home/sfmx/prueba/front-react
+
+    - name: Generar build de React
+      command: npm run build
+      args:
+        chdir: /home/sfmx/prueba/front-react
+
+    - name: Agregar usuario al grupo de docker 
+      user:
+        name: sfmx
+        groups: docker
+        append: yes
+      
+    - name: Contruir la imagen de Docker
+      command: docker build -t prueba .
+      args:
+        chdir: /home/sfmx/prueba/front-react
+
+    - name: Ejecutar el cointenerlo de la imagen docker
+      command: docker run -d -p 3000:3000 --name prueba-container prueba
+
+    - name: Verificar que el contenedor esta corriendo
+      command: docker ps
+    
+
+    
+
+
+
+

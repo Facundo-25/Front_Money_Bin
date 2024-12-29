@@ -1,0 +1,17 @@
+# Ansible
+/ansible/.vscode
+
+# Frontend
+/front-react/.vscode
+/front-react/node_modules
+
+
+# Terraform
+/terraform/.vscode
+/terraform/.terraform
+/terraform/.terraform.lock.hcl
+/terraform/terraform.tfstate
+/terraform/terraform.tfstate.backup
+/terraform/key.json
+
+
