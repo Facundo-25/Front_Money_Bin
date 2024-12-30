@@ -1,4 +1,4 @@
-- name: Configurar Git, Clonear Repositorio, genrar build de react y crear imagen en docker
+- name: Configurar Git, clonar repositorio, generar build de React y crear imagen Docker
   hosts: localhost
   become: yes
   tasks:
@@ -7,64 +7,63 @@
         name: git
         state: present
         update_cache: yes
-      
-    - name: Clonar Repositorio
+
+    - name: Clonar el repositorio privado usando un token de acceso personal
       git:
-        repo: 'git@gitlab.com:StevenMejia/pruebas.git'
-        dest: /home/sfmx/prueba
-        version: 'main'
+        repo: 'https://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@github.com/Facundo-25/Front_Money_Bin.git'
+        dest: /home/sfmx/Front_Money_Bin
+        version: "main"
         force: yes
-          
-    - name: Instalar Curl
+
+
+    - name: Instalar curl
       apt:
         name: curl
         state: present
         update_cache: yes
-      
-    - name: Descargar script de NodeSource para Node.js
-      command: curl -sL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh
 
-    - name: Ejecutar script de NodeSource para Node.js
+    - name: Descargar script de NodeSource para Node.js 20.x
+      command: curl -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource_setup.sh
+
+    - name: Ejecutar script de NodeSource
       command: bash /tmp/nodesource_setup.sh
 
-    - name: Instllar Nodej.js y npm (v20.17.0 y npm 10.8.2)
+    - name: Instalar Node.js y npm (v20.17.0 y npm 10.8.2)
       apt:
         name: nodejs
         state: present
 
-    - name: Actualiza npm a la version 10.8.2
+    - name: Actualizar npm a la versión 10.8.2
       command: npm install -g npm@10.8.2
 
-    - name: Instalar dependencias de React
-      command: npm install 
+    - name: Limpiar dependencias anteriores (node_modules y package-lock.json)
+      command: rm -rf node_modules package-lock.json
       args:
-        chdir: /home/sfmx/prueba/front-react
+        chdir: /home/sfmx/Front_Money_Bin/front-rect
 
-    - name: Generar build de React
+    - name: Instalar dependencias del proyecto
+      command: npm install
+      args:
+        chdir: /home/sfmx/Front_Money_Bin/front-rect
+
+    - name: Generar build de la aplicación React
       command: npm run build
       args:
-        chdir: /home/sfmx/prueba/front-react
+        chdir: /home/sfmx/Front_Money_Bin/front-rect
 
-    - name: Agregar usuario al grupo de docker 
+    - name: Agregar usuario al grupo Docker para evitar usar sudo
       user:
         name: sfmx
         groups: docker
         append: yes
-      
-    - name: Contruir la imagen de Docker
-      command: docker build -t prueba .
+
+    - name: Construir la imagen Docker desde el Dockerfile
+      command: docker build -t my-react-app .
       args:
-        chdir: /home/sfmx/prueba/front-react
+        chdir: /home/sfmx/Front_Money_Bin/front-rect
 
-    - name: Ejecutar el cointenerlo de la imagen docker
-      command: docker run -d -p 3000:3000 --name prueba-container prueba
+    - name: Ejecutar el contenedor de la imagen Docker
+      command: docker run -d -p 3000:80 --name my-react-app-container my-react-app
 
-    - name: Verificar que el contenedor esta corriendo
+    - name: Verificar que el contenedor esté corriendo
       command: docker ps
-    
-
-    
-
-
-
-
