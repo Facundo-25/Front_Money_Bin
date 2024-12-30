@@ -8,14 +8,17 @@
         state: present
         update_cache: yes
 
+    - name: Mensaje de satisfaccion de instalacion de Git
+      debug:
+        msg: "Git se ha instalado correctamente"
+
     - name: Clonar el repositorio privado usando un token de acceso personal
       git:
-        repo: 'https://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@github.com/Facundo-25/Front_Money_Bin.git'
+        repo: 'https://github.com/Facundo-25/Front_Money_Bin.git'
         dest: /home/sfmx/Front_Money_Bin
         version: "main"
         force: yes
-
-
+  
     - name: Instalar curl
       apt:
         name: curl
@@ -63,7 +66,7 @@
         chdir: /home/sfmx/Front_Money_Bin/front-rect
 
     - name: Ejecutar el contenedor de la imagen Docker
-      command: docker run -d -p 3000:80 --name my-react-app-container my-react-app
+      command: docker run -d -p 3000:3000 --name my-react-app-container my-react-app
 
     - name: Verificar que el contenedor esté corriendo
       command: docker ps

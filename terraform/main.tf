@@ -1,6 +1,6 @@
 resource "tls_private_key" "example_ssh" {
   algorithm = "RSA"
-  rsa_bits  = 4096
+  rsa_bits  = 2048
 }
 
 resource "local_file" "private_key" {
@@ -17,7 +17,7 @@ resource "local_file" "public_key" {
 resource "google_compute_instance" "frontend" {
   name         = var.instance_name
   machine_type = "e2-small"
-  zone         = "us-central1-a"
+  zone         = "us-central1-c"
 
   boot_disk {
     initialize_params {
@@ -26,7 +26,7 @@ resource "google_compute_instance" "frontend" {
   }
 
   network_interface {
-    network = "default"
+    network       = "default"
     access_config {}
   }
 
@@ -39,39 +39,25 @@ resource "google_compute_instance" "frontend" {
       type        = "ssh"
       user        = "sfmx"
       private_key = tls_private_key.example_ssh.private_key_pem
-      host        = self.network_interface[0].access_config[0].nat_ip
+      host        = self.network_interface[0].access_config[0].nat_ip 
     }
 
-    inline = [
-      # Actualizar los paquetes existentes
-      "sudo apt-get update",
-
-      # Instalar paquetes necesarios para añadir repositorios y otras dependencias
-      "sudo apt-get install -y software-properties-common apt-transport-https ca-certificates curl",
-
-      # Añadir el repositorio de Ansible
-      "sudo add-apt-repository --yes --update ppa:ansible/ansible",
-      "sudo apt-get install -y ansible",
-
-      # Añadir la clave GPG oficial de Docker
-      "sudo install -m 0755 -d /etc/apt/keyrings",
-      "sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc",
-      "sudo chmod a+r /etc/apt/keyrings/docker.asc",
-
-      # Añadir el repositorio de Docker
-      "echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
-      "sudo apt-get update",
-
-      # Instalar Docker y dependencias
-      "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
-    ]
-
-
+  inline = [
+    "sudo apt-get update",
+    "sudo apt-get install -y software-properties-common",
+    "sudo add-apt-repository --yes --update ppa:ansible/ansible",
+    "sudo apt-get install -y ansible",
+    "sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common",
+    "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -",
+    "sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
+    "sudo apt-get update",
+    "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
+  ]
   }
 
-  # Agregar el archivo prvisioner para copiar la carpeta local al destino remoto
+  # Agregar el file provisioner para copiar la carpeta local al destino remoto
   provisioner "file" {
-    source      = "/home/sfmx/Downloads/pruebas/ansible"
+    source      = "/home/sfmx/WorkSpaces/Front_Money_Bin/ansible"
     destination = "/home/sfmx/ansible"
 
     connection {
@@ -82,7 +68,7 @@ resource "google_compute_instance" "frontend" {
     }
   }
 
-  provisioner "remote-exec" {
+    provisioner "remote-exec" {
     connection {
       type        = "ssh"
       user        = "sfmx"
@@ -98,7 +84,7 @@ resource "google_compute_instance" "frontend" {
 
 resource "google_compute_firewall" "allow_http" {
   name    = "allow-http"
-  network = "default"
+  network = "default" 
 
   allow {
     protocol = "tcp"
